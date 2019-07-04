@@ -1,0 +1,16 @@
+[package]
+name = "example-stm32f103c8"
+version = "0.1.0"
+authors = ["Vadim Kaushan <admin@disasm.info>"]
+edition = "2018"
+
+[dependencies]
+cortex-m = "0.6"
+cortex-m-rt = "0.6"
+stm32f1xx-hal = { version = "0.3", features = ["rt"] }
+panic-semihosting = "0.5"
+usb-device = "0.2.1"
+stm32-usbd = { version = "0.2", features = ["stm32f103xx"] }
+
+[patch.crates-io]
+stm32-usbd = { path = "../../stm32-usbd" }
