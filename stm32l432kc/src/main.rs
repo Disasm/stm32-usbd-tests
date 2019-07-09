@@ -6,7 +6,6 @@ extern crate panic_semihosting;
 use cortex_m_rt::entry;
 use stm32_usbd::UsbBus;
 use stm32l4xx_hal::{prelude::*, stm32};
-use usb_device::prelude::*;
 use usb_device::test_class::TestClass;
 
 fn enable_crs() {
