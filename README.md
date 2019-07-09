@@ -7,6 +7,7 @@ Disconnect USB cable from the target board. Connect ST-LINK programmer and power
 cargo run --release --example interrupt
 ```
 Observe that there is no panic message.
+
 Repeat for all the boards available.
 
 ## Stage 2: general tests
