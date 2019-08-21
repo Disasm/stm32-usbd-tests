@@ -1,0 +1,29 @@
+[package]
+name    = "example-stm32l082xx"
+version = "0.1.0"
+authors = [
+    "Hanno Braun <hanno@braun-embedded.com>",
+    "Vadim Kaushan <admin@disasm.info>",
+]
+edition = "2018"
+
+
+[dependencies]
+cortex-m    = "0.6.0"
+cortex-m-rt = "0.6.10"
+usb-device  = "0.2.2"
+
+[dependencies.stm32l0xx-hal]
+git      = "https://github.com/stm32-rs/stm32l0xx-hal.git"
+features = ["rt", "stm32l0x2"]
+
+[dependencies.stm32-usbd]
+git      = "https://github.com/braun-embedded/stm32-usbd.git"
+branch   = "stm32l0x2"
+features = ["stm32l0x2xx"]
+
+
+# Required because stm32-usbd depends on the latest crates.io version, while
+# this crate depends on unreleased features.
+[patch.crates-io.stm32l0xx-hal]
+git = "https://github.com/stm32-rs/stm32l0xx-hal.git"
