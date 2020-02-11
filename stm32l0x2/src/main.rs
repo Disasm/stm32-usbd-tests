@@ -11,9 +11,8 @@ use stm32l0xx_hal::{
     pac,
     rcc,
     syscfg::SYSCFG,
-    usb,
+    usb::{UsbBus, USB},
 };
-use stm32_usbd::UsbBus;
 use usb_device::test_class::TestClass;
 
 
@@ -22,15 +21,13 @@ fn main() -> ! {
     let dp = pac::Peripherals::take().unwrap();
 
     let mut rcc    = dp.RCC.freeze(rcc::Config::hsi16());
-    let mut syscfg = SYSCFG::new(dp.SYSCFG_COMP, &mut rcc);
+    let mut syscfg = SYSCFG::new(dp.SYSCFG, &mut rcc);
+    let     hsi48  = rcc.enable_hsi48(&mut syscfg, dp.CRS);
     let     gpioa  = dp.GPIOA.split(&mut rcc);
 
-    usb::init(&mut rcc, &mut syscfg, dp.CRS);
+    let usb = USB::new(dp.USB, gpioa.pa11, gpioa.pa12, hsi48);
 
-    let usb_dm = gpioa.pa11;
-    let usb_dp = gpioa.pa12;
-
-    let     bus    = UsbBus::new(dp.USB, (usb_dm, usb_dp));
+    let     bus    = UsbBus::new(usb);
     let mut test   = TestClass::new(&bus);
     let mut device = { test.make_device(&bus) };
 

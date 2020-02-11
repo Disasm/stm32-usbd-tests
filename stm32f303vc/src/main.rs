@@ -5,14 +5,10 @@ extern crate panic_semihosting;
 
 use cortex_m::asm::delay;
 use cortex_m_rt::entry;
-use stm32_usbd::UsbBus;
 use stm32f3xx_hal::{prelude::*, stm32, hal::digital::v2::OutputPin};
+use stm32f3xx_hal::usb::{UsbBus, Peripheral};
 use usb_device::test_class::TestClass;
 
-fn configure_usb_clock() {
-    let rcc = unsafe { &*stm32::RCC::ptr() };
-    rcc.cfgr.modify(|_, w| w.usbpre().set_bit());
-}
 
 #[entry]
 fn main() -> ! {
@@ -23,12 +19,13 @@ fn main() -> ! {
 
     let clocks = rcc
         .cfgr
+        .use_hse(8.mhz())
         .sysclk(48.mhz())
         .pclk1(24.mhz())
         .pclk2(24.mhz())
         .freeze(&mut flash.acr);
 
-    // assert!(clocks.usbclk_valid());
+    assert!(clocks.usbclk_valid());
 
     let mut gpioa = dp.GPIOA.split(&mut rcc.ahb);
 
@@ -41,9 +38,12 @@ fn main() -> ! {
     let usb_dm = gpioa.pa11.into_af14(&mut gpioa.moder, &mut gpioa.afrh);
     let usb_dp = usb_dp.into_af14(&mut gpioa.moder, &mut gpioa.afrh);
 
-    configure_usb_clock();
-
-    let usb_bus = UsbBus::new(dp.USB, (usb_dm, usb_dp));
+    let usb = Peripheral {
+        usb: dp.USB,
+        pin_dm: usb_dm,
+        pin_dp: usb_dp,
+    };
+    let usb_bus = UsbBus::new(usb);
 
     let mut test = TestClass::new(&usb_bus);
 

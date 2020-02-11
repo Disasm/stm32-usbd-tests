@@ -4,8 +4,8 @@
 extern crate panic_semihosting;
 
 use cortex_m_rt::entry;
-use stm32_usbd::UsbBus;
 use stm32l4xx_hal::{prelude::*, stm32};
+use stm32l4xx_hal::usb::{UsbBus, Peripheral};
 use usb_device::test_class::TestClass;
 
 fn enable_crs() {
@@ -55,7 +55,13 @@ fn main() -> ! {
     let usb_dm = gpioa.pa11.into_af10(&mut gpioa.moder, &mut gpioa.afrh);
     let usb_dp = gpioa.pa12.into_af10(&mut gpioa.moder, &mut gpioa.afrh);
 
-    let usb_bus = UsbBus::new(dp.USB, (usb_dm, usb_dp));
+    let usb = Peripheral {
+        usb: dp.USB,
+        pin_dm: usb_dm,
+        pin_dp: usb_dp,
+    };
+
+    let usb_bus = UsbBus::new(usb);
 
     let mut test = TestClass::new(&usb_bus);
 

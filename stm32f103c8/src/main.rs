@@ -5,9 +5,10 @@ extern crate panic_semihosting;
 
 use cortex_m::asm::delay;
 use cortex_m_rt::entry;
-use stm32_usbd::UsbBus;
 use stm32f1xx_hal::{prelude::*, stm32};
+use stm32f1xx_hal::usb::{UsbBus, Peripheral};
 use usb_device::test_class::TestClass;
+use embedded_hal::digital::v2::OutputPin;
 
 #[entry]
 fn main() -> ! {
@@ -33,10 +34,12 @@ fn main() -> ! {
     usb_dp.set_low();
     delay(clocks.sysclk().0 / 100);
 
-    let usb_dm = gpioa.pa11;
-    let usb_dp = usb_dp.into_floating_input(&mut gpioa.crh);
-
-    let usb_bus = UsbBus::new(dp.USB, (usb_dm, usb_dp));
+    let usb = Peripheral {
+        usb: dp.USB,
+        pin_dm: gpioa.pa11,
+        pin_dp: usb_dp.into_floating_input(&mut gpioa.crh),
+    };
+    let usb_bus = UsbBus::new(usb);
 
     let mut test = TestClass::new(&usb_bus);
 

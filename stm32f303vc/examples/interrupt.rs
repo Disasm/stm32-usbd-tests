@@ -5,8 +5,8 @@ extern crate panic_semihosting;
 
 use cortex_m::asm::delay;
 use cortex_m_rt::entry;
-use stm32_usbd::{UsbBus, UsbBusType};
 use stm32f3xx_hal::{prelude::*, stm32, hal::digital::v2::OutputPin};
+use stm32f3xx_hal::usb::{UsbBus, UsbBusType, Peripheral};
 use usb_device::{test_class::TestClass, prelude::*, class_prelude::*};
 
 static mut USB_BUS: Option<UsbBusAllocator<UsbBusType>> = None;
@@ -27,12 +27,13 @@ fn main() -> ! {
 
     let clocks = rcc
         .cfgr
+        .use_hse(8.mhz())
         .sysclk(48.mhz())
         .pclk1(24.mhz())
         .pclk2(24.mhz())
         .freeze(&mut flash.acr);
 
-    // assert!(clocks.usbclk_valid());
+    assert!(clocks.usbclk_valid());
 
     let mut gpioa = dp.GPIOA.split(&mut rcc.ahb);
 
@@ -47,9 +48,15 @@ fn main() -> ! {
 
     configure_usb_clock();
 
+    let usb = Peripheral {
+        usb: dp.USB,
+        pin_dm: usb_dm,
+        pin_dp: usb_dp,
+    };
+
     // Unsafe to allow access to static variables
     unsafe {
-        USB_BUS = Some(UsbBus::new(dp.USB, (usb_dm, usb_dp)));
+        USB_BUS = Some(UsbBus::new(usb));
         USB_TEST_CLASS = Some(TestClass::new(USB_BUS.as_ref().unwrap()));
         USB_DEVICE = Some(USB_TEST_CLASS.as_ref().unwrap().make_device(USB_BUS.as_ref().unwrap()));
     }

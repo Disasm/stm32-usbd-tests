@@ -15,11 +15,7 @@ use stm32l0xx_hal::{
     },
     rcc,
     syscfg::SYSCFG,
-    usb,
-};
-use stm32_usbd::{
-    UsbBus,
-    UsbBusType,
+    usb::{UsbBus, UsbBusType, USB},
 };
 use usb_device::{
     prelude::*,
@@ -40,18 +36,16 @@ fn main() -> ! {
 
     let mut nvic   = cp.NVIC;
     let mut rcc    = dp.RCC.freeze(rcc::Config::hsi16());
-    let mut syscfg = SYSCFG::new(dp.SYSCFG_COMP, &mut rcc);
+    let mut syscfg = SYSCFG::new(dp.SYSCFG, &mut rcc);
+    let     hsi48  = rcc.enable_hsi48(&mut syscfg, dp.CRS);
     let     gpioa  = dp.GPIOA.split(&mut rcc);
 
-    usb::init(&mut rcc, &mut syscfg, dp.CRS);
-
-    let usb_dm = gpioa.pa11;
-    let usb_dp = gpioa.pa12;
+    let usb = USB::new(dp.USB, gpioa.pa11, gpioa.pa12, hsi48);
 
     // Safe, as the interrupt handler that accesses these statics is not enabled
     // yet, which means we still have exclusive access.
     unsafe {
-        USB_BUS = Some(UsbBus::new(dp.USB, (usb_dm, usb_dp)));
+        USB_BUS = Some(UsbBus::new(usb));
         USB_TEST_CLASS = Some(TestClass::new(USB_BUS.as_ref().unwrap()));
         USB_DEVICE = Some(
             USB_TEST_CLASS

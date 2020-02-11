@@ -4,8 +4,8 @@
 extern crate panic_semihosting;
 
 use cortex_m_rt::entry;
-use stm32_usbd::{UsbBus, UsbBusType};
 use stm32l4xx_hal::{prelude::*, stm32};
+use stm32l4xx_hal::usb::{UsbBus, UsbBusType, Peripheral};
 use usb_device::{test_class::TestClass, prelude::*, class_prelude::*};
 
 static mut USB_BUS: Option<UsbBusAllocator<UsbBusType>> = None;
@@ -59,9 +59,15 @@ fn main() -> ! {
     let usb_dm = gpioa.pa11.into_af10(&mut gpioa.moder, &mut gpioa.afrh);
     let usb_dp = gpioa.pa12.into_af10(&mut gpioa.moder, &mut gpioa.afrh);
 
+    let usb = Peripheral {
+        usb: dp.USB,
+        pin_dm: usb_dm,
+        pin_dp: usb_dp,
+    };
+
     // Unsafe to allow access to static variables
     unsafe {
-        USB_BUS = Some(UsbBus::new(dp.USB, (usb_dm, usb_dp)));
+        USB_BUS = Some(UsbBus::new(usb));
         USB_TEST_CLASS = Some(TestClass::new(USB_BUS.as_ref().unwrap()));
         USB_DEVICE = Some(USB_TEST_CLASS.as_ref().unwrap().make_device(USB_BUS.as_ref().unwrap()));
     }
