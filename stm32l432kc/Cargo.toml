@@ -13,3 +13,5 @@ cortex-m = "0.6.1"
 
 [patch.crates-io]
 stm32-usbd = { path = "../../stm32-usbd" }
+# TODO: remove this after stm32l4xx-hal release with USB
+stm32l4xx-hal = { git = "https://github.com/stm32-rs/stm32l4xx-hal.git", rev = "c76dc8217e5e24ba3e941cb83d6ca84dc3eb2963" }
