@@ -4,8 +4,9 @@
 extern crate panic_semihosting;
 
 use cortex_m::asm::delay;
+use cortex_m::peripheral::NVIC;
 use cortex_m_rt::entry;
-use stm32f1xx_hal::{prelude::*, stm32};
+use stm32f1xx_hal::{prelude::*, stm32, stm32::Interrupt};
 use stm32f1xx_hal::usb::{UsbBus, UsbBusType, Peripheral};
 use usb_device::{test_class::TestClass, prelude::*, class_prelude::*};
 use embedded_hal::digital::v2::OutputPin;
@@ -35,7 +36,7 @@ fn main() -> ! {
     // BluePill board has a pull-up resistor on the D+ line.
     // Pull the D+ pin down to send a RESET condition to the USB bus.
     let mut usb_dp = gpioa.pa12.into_push_pull_output(&mut gpioa.crh);
-    usb_dp.set_low();
+    usb_dp.set_low().unwrap();
     delay(clocks.sysclk().0 / 100);
 
     let usb = Peripheral {
@@ -51,10 +52,10 @@ fn main() -> ! {
         USB_DEVICE = Some(USB_TEST_CLASS.as_ref().unwrap().make_device(USB_BUS.as_ref().unwrap()));
     }
 
-    let p = cortex_m::Peripherals::take().unwrap();
-    let mut nvic = p.NVIC;
-    nvic.enable(stm32::Interrupt::USB_HP_CAN_TX);
-    nvic.enable(stm32::Interrupt::USB_LP_CAN_RX0);
+    unsafe {
+        NVIC::unmask(Interrupt::USB_HP_CAN_TX);
+        NVIC::unmask(Interrupt::USB_LP_CAN_RX0);
+    }
 
     loop {
         cortex_m::asm::wfi();

@@ -4,6 +4,7 @@
 
 use core::panic::PanicInfo;
 
+use cortex_m::peripheral::NVIC;
 use cortex_m_rt::entry;
 use stm32l0xx_hal::{
     prelude::*,
@@ -11,7 +12,6 @@ use stm32l0xx_hal::{
         self,
         Interrupt,
         interrupt,
-        GPIOB,
     },
     rcc,
     syscfg::SYSCFG,
@@ -31,10 +31,8 @@ static mut USB_DEVICE: Option<UsbDevice<UsbBusType>>     = None;
 
 #[entry]
 fn main() -> ! {
-    let cp = pac::CorePeripherals::take().unwrap();
     let dp = pac::Peripherals::take().unwrap();
 
-    let mut nvic   = cp.NVIC;
     let mut rcc    = dp.RCC.freeze(rcc::Config::hsi16());
     let mut syscfg = SYSCFG::new(dp.SYSCFG, &mut rcc);
     let     hsi48  = rcc.enable_hsi48(&mut syscfg, dp.CRS);
@@ -55,7 +53,7 @@ fn main() -> ! {
         );
     }
 
-    nvic.enable(Interrupt::USB);
+    unsafe { NVIC::unmask(Interrupt::USB); }
 
     loop {
         cortex_m::asm::wfi();

@@ -4,6 +4,7 @@
 extern crate panic_semihosting;
 
 use cortex_m::asm::delay;
+use cortex_m::peripheral::NVIC;
 use cortex_m_rt::entry;
 use stm32f3xx_hal::{prelude::*, stm32, hal::digital::v2::OutputPin};
 use stm32f3xx_hal::usb::{UsbBus, UsbBusType, Peripheral};
@@ -61,10 +62,10 @@ fn main() -> ! {
         USB_DEVICE = Some(USB_TEST_CLASS.as_ref().unwrap().make_device(USB_BUS.as_ref().unwrap()));
     }
 
-    let p = cortex_m::Peripherals::take().unwrap();
-    let mut nvic = p.NVIC;
-    nvic.enable(stm32::Interrupt::USB_HP_CAN_TX);
-    nvic.enable(stm32::Interrupt::USB_LP_CAN_RX0);
+    unsafe {
+        NVIC::unmask(stm32::Interrupt::USB_HP_CAN_TX);
+        NVIC::unmask(stm32::Interrupt::USB_LP_CAN_RX0);
+    }
 
     loop {
         cortex_m::asm::wfi();

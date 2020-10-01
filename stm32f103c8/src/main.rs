@@ -31,7 +31,7 @@ fn main() -> ! {
     // BluePill board has a pull-up resistor on the D+ line.
     // Pull the D+ pin down to send a RESET condition to the USB bus.
     let mut usb_dp = gpioa.pa12.into_push_pull_output(&mut gpioa.crh);
-    usb_dp.set_low();
+    usb_dp.set_low().unwrap();
     delay(clocks.sysclk().0 / 100);
 
     let usb = Peripheral {
