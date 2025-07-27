@@ -5,34 +5,33 @@ extern crate panic_semihosting;
 
 use cortex_m::asm::delay;
 use cortex_m_rt::entry;
+use stm32f1xx_hal::usb::{Peripheral, UsbBus};
 use stm32f1xx_hal::{prelude::*, stm32};
-use stm32f1xx_hal::usb::{UsbBus, Peripheral};
 use usb_device::test_class::TestClass;
-use embedded_hal::digital::v2::OutputPin;
 
 #[entry]
 fn main() -> ! {
     let dp = stm32::Peripherals::take().unwrap();
 
     let mut flash = dp.FLASH.constrain();
-    let mut rcc = dp.RCC.constrain();
+    let rcc = dp.RCC.constrain();
 
     let clocks = rcc
         .cfgr
-        .use_hse(8.mhz())
-        .sysclk(48.mhz())
-        .pclk1(24.mhz())
+        .use_hse(8.MHz())
+        .sysclk(48.MHz())
+        .pclk1(24.MHz())
         .freeze(&mut flash.acr);
 
     assert!(clocks.usbclk_valid());
 
-    let mut gpioa = dp.GPIOA.split(&mut rcc.apb2);
+    let mut gpioa = dp.GPIOA.split();
 
     // BluePill board has a pull-up resistor on the D+ line.
     // Pull the D+ pin down to send a RESET condition to the USB bus.
     let mut usb_dp = gpioa.pa12.into_push_pull_output(&mut gpioa.crh);
-    usb_dp.set_low().unwrap();
-    delay(clocks.sysclk().0 / 100);
+    usb_dp.set_low();
+    delay(clocks.sysclk().raw() / 100);
 
     let usb = Peripheral {
         usb: dp.USB,

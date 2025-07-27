@@ -5,24 +5,23 @@ extern crate panic_semihosting;
 
 use cortex_m::asm::delay;
 use cortex_m_rt::entry;
-use stm32f3xx_hal::{prelude::*, stm32, hal::digital::v2::OutputPin};
-use stm32f3xx_hal::usb::{UsbBus, Peripheral};
+use stm32f3xx_hal::usb::{Peripheral, UsbBus};
+use stm32f3xx_hal::{hal::digital::v2::OutputPin, pac, prelude::*};
 use usb_device::test_class::TestClass;
-
 
 #[entry]
 fn main() -> ! {
-    let dp = stm32::Peripherals::take().unwrap();
+    let dp = pac::Peripherals::take().unwrap();
 
     let mut flash = dp.FLASH.constrain();
     let mut rcc = dp.RCC.constrain();
 
     let clocks = rcc
         .cfgr
-        .use_hse(8.mhz())
-        .sysclk(48.mhz())
-        .pclk1(24.mhz())
-        .pclk2(24.mhz())
+        .use_hse(8.MHz())
+        .sysclk(48.MHz())
+        .pclk1(24.MHz())
+        .pclk2(24.MHz())
         .freeze(&mut flash.acr);
 
     assert!(clocks.usbclk_valid());
@@ -31,12 +30,18 @@ fn main() -> ! {
 
     // F3 Discovery board has a pull-up resistor on the D+ line.
     // Pull the D+ pin down to send a RESET condition to the USB bus.
-    let mut usb_dp = gpioa.pa12.into_push_pull_output(&mut gpioa.moder, &mut gpioa.otyper);
-    usb_dp.set_low().unwrap();
+    // This forced reset is needed only for development, without it host
+    // will not reset your device when you upload new firmware.
+    let mut usb_dp = gpioa
+        .pa12
+        .into_push_pull_output(&mut gpioa.moder, &mut gpioa.otyper);
+    usb_dp.set_low().ok();
     delay(clocks.sysclk().0 / 100);
 
-    let usb_dm = gpioa.pa11.into_af14(&mut gpioa.moder, &mut gpioa.afrh);
-    let usb_dp = usb_dp.into_af14(&mut gpioa.moder, &mut gpioa.afrh);
+    let usb_dm = gpioa
+        .pa11
+        .into_af_push_pull(&mut gpioa.moder, &mut gpioa.otyper, &mut gpioa.afrh);
+    let usb_dp = usb_dp.into_af_push_pull(&mut gpioa.moder, &mut gpioa.otyper, &mut gpioa.afrh);
 
     let usb = Peripheral {
         usb: dp.USB,

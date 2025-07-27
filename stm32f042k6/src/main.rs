@@ -4,8 +4,8 @@
 extern crate panic_semihosting;
 
 use cortex_m_rt::entry;
+use stm32f0xx_hal::usb::{Peripheral, UsbBus};
 use stm32f0xx_hal::{prelude::*, stm32};
-use stm32f0xx_hal::usb::{UsbBus, Peripheral};
 use usb_device::test_class::TestClass;
 
 #[entry]

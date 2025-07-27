@@ -5,12 +5,11 @@ authors = ["Vadim Kaushan <admin@disasm.info>"]
 edition = "2018"
 
 [dependencies]
-cortex-m = "0.6.3"
-cortex-m-rt = "0.6.10"
-stm32f1xx-hal = { version = "0.5.0", features = ["rt", "stm32-usbd", "stm32f103"] }
-embedded-hal = "0.2.3"
-panic-semihosting = "0.5.3"
-usb-device = "0.2.3"
+cortex-m = "0.7.7"
+cortex-m-rt = "0.7.5"
+stm32f1xx-hal = { version = "0.10.0", features = ["rt", "stm32f103"] }
+panic-semihosting = "0.6.0"
+usb-device = "0.3.2"
 
-[patch.crates-io]
-stm32-usbd = { path = "../../stm32-usbd" }
+[dev-dependencies]
+usbd-serial = "0.2.2"
